@@ -2,7 +2,6 @@ let cache = { value: null, time: 0 };
 
 export default async function handler(req, res) {
   try {
-    // cache 60 sec
     if (Date.now() - cache.time < 60000) {
       return res.status(200).json({ followers: cache.value });
     }
@@ -10,19 +9,20 @@ export default async function handler(req, res) {
     const username = "themagicloic";
 
     const response = await fetch(
-      `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
+      `https://www.instagram.com/${username}/?__a=1&__d=dis`,
       {
         headers: {
-          "User-Agent": "Mozilla/5.0",
-          "x-ig-app-id": "936619743392459"
+          "User-Agent": "Mozilla/5.0"
         }
       }
     );
 
-    const data = await response.json();
+    const text = await response.text();
+
+    const data = JSON.parse(text);
 
     const followers =
-      data.data.user.edge_followed_by.count;
+      data.graphql.user.edge_followed_by.count;
 
     cache = {
       value: followers,
@@ -32,6 +32,6 @@ export default async function handler(req, res) {
     res.status(200).json({ followers });
 
   } catch (e) {
-    res.status(500).json({ error: "fail" });
+    res.status(200).json({ error: "fail" });
   }
 }
