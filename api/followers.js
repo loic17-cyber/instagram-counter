@@ -2,6 +2,7 @@ let cache = { value: null, time: 0 };
 
 export default async function handler(req, res) {
   try {
+    // cache 60 secondes
     if (Date.now() - cache.time < 60000) {
       return res.status(200).json({ followers: cache.value });
     }
@@ -9,7 +10,7 @@ export default async function handler(req, res) {
     const username = "themagicloic";
 
     const response = await fetch(
-      `https://www.instagram.com/${username}/?__a=1&__d=dis`,
+      `https://www.instagram.com/${username}/`,
       {
         headers: {
           "User-Agent": "Mozilla/5.0"
@@ -17,12 +18,16 @@ export default async function handler(req, res) {
       }
     );
 
-    const text = await response.text();
+    const html = await response.text();
 
-    const data = JSON.parse(text);
+    // on cherche le nombre d'abonnés dans le HTML
+    const match = html.match(/"edge_followed_by":{"count":(\d+)}/);
 
-    const followers =
-      data.graphql.user.edge_followed_by.count;
+    if (!match) {
+      throw new Error("not found");
+    }
+
+    const followers = parseInt(match[1]);
 
     cache = {
       value: followers,
